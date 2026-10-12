@@ -22,11 +22,22 @@
     <script>
         function formatText(text) {
             if (!text) return '';
+            
+            // Remplace les sauts de ligne intempestifs au milieu d'une URL
             let cleanedText = text.replace(/(https?:\/\/[^\s]+)\s+([^\s]+)/g, '$1$2');
+
+            // Regex qui capture l'URL en s'arrêtant proprement avant un mot parasite comme "Télécharger"
             const urlRegex = /(https?:\/\/[^\s<]+)/g;
+
             return cleanedText.replace(urlRegex, function(url) {
+                // Nettoie si le mot "Télécharger" ou un libellé similaire s'est collé à la fin
+                url = url.replace(/Télécharger.*$/, '');
+                
                 let cleanUrl = url.replace(/[.,;:)]$/, '');
                 let trailingChar = url.slice(cleanUrl.length);
+                
+                if (!cleanUrl.startsWith('http')) return url;
+
                 return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl} <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>${trailingChar}`;
             });
         }
@@ -139,9 +150,5 @@
             document.getElementById('app').innerHTML = html;
         });
     </script>
-</body>
-</html>
-
-
 </body>
 </html>
