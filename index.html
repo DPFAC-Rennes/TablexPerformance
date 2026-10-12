@@ -7,9 +7,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
-        /* Césure obligatoire pour éviter les débordements de texte et de liens */
-        .content-text { word-break: break-word; overflow-wrap: break-word; }
-        .content-text a { color: #38bdf8 !important; text-decoration: underline !important; font-weight: 500; }
+        /* Gestion propre et stricte du texte pour éviter tout débordement de cadre */
+        .content-text { width: 100%; word-break: break-word; overflow-wrap: break-word; white-space: pre-line; }
+        .content-text a { color: #38bdf8 !important; text-decoration: underline !important; font-weight: 500; display: inline-block; max-width: 100%; word-break: break-all; }
         .content-text a:hover { color: #7dd3fc !important; }
     </style>
 </head>
@@ -20,11 +20,11 @@
     </div>
 
     <script>
-        // Fonction propre pour transformer les URL en liens cliquables sécurisés
         function formatText(text) {
             if (!text) return '';
+            let cleanedText = text.replace(/(https?:\/\/[^\s]+)\s+([^\s]+)/g, '$1$2');
             const urlRegex = /(https?:\/\/[^\s<]+)/g;
-            return text.replace(urlRegex, function(url) {
+            return cleanedText.replace(urlRegex, function(url) {
                 let cleanUrl = url.replace(/[.,;:)]$/, '');
                 let trailingChar = url.slice(cleanUrl.length);
                 return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl} <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>${trailingChar}`;
@@ -69,13 +69,13 @@
 
                         <!-- Grille Segment & Art. 58 AGEC -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
+                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 overflow-hidden">
                                 <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center mb-1">
                                     <i class="fa-solid fa-layer-group mr-1.5"></i> Segment
                                 </span>
                                 <div class="text-slate-200 text-sm content-text">${formatText(data.Segment) || 'Aucun segment défini'}</div>
                             </div>
-                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
+                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 overflow-hidden">
                                 <span class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center mb-1">
                                     <i class="fa-solid fa-scale-balanced mr-1.5"></i> Art. 58 Loi AGEC
                                 </span>
@@ -85,13 +85,13 @@
 
                         <!-- Catégorie & Recommandations AGEC -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
+                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 overflow-hidden">
                                 <span class="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center mb-1">
                                     <i class="fa-solid fa-tags mr-1.5"></i> Catégorie AGEC
                                 </span>
                                 <div class="text-slate-200 text-sm content-text">${formatText(data.Categorie_AGEC) || 'Non renseignée'}</div>
                             </div>
-                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
+                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 overflow-hidden">
                                 <span class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center mb-1">
                                     <i class="fa-solid fa-lightbulb mr-1.5"></i> Recommandations AGEC
                                 </span>
@@ -101,13 +101,13 @@
 
                         <!-- Recommandations Filières & Déforestation -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
+                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 overflow-hidden">
                                 <span class="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center mb-1">
                                     <i class="fa-solid fa-industry mr-1.5"></i> Recommandations Filières
                                 </span>
                                 <div class="text-slate-200 text-sm content-text">${formatText(data.Recommandations_Filieres) || 'Aucune'}</div>
                             </div>
-                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
+                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 overflow-hidden">
                                 <span class="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center mb-1">
                                     <i class="fa-solid fa-tree mr-1.5"></i> Recommandations Déforestation
                                 </span>
@@ -121,7 +121,7 @@
                             <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center mb-2">
                                 <i class="fa-solid fa-leaf mr-2 text-emerald-500"></i> Clauses et Recommandations Environnementales
                             </span>
-                            <div class="text-slate-300 text-sm whitespace-pre-line pl-4 content-text">${formatText(data.Clauses_et_Recommandations_Environnementales) || 'Aucune clause environnementale spécifiée.'}</div>
+                            <div class="text-slate-300 text-sm pl-4 content-text">${formatText(data.Clauses_et_Recommandations_Environnementales) || 'Aucune clause environnementale spécifiée.'}</div>
                         </div>
 
                         <!-- Bloc Social -->
@@ -130,7 +130,7 @@
                             <span class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center mb-2">
                                 <i class="fa-solid fa-handshake-angle mr-2 text-sky-500"></i> Clauses et Recommandations Sociales
                             </span>
-                            <div class="text-slate-300 text-sm whitespace-pre-line pl-4 content-text">${formatText(data.Clauses_et_Recommandations_Sociales) || 'Aucune clause sociale spécifiée.'}</div>
+                            <div class="text-slate-300 text-sm pl-4 content-text">${formatText(data.Clauses_et_Recommandations_Sociales) || 'Aucune clause sociale spécifiée.'}</div>
                         </div>
 
                     </div>
@@ -141,6 +141,7 @@
     </script>
 </body>
 </html>
+
 
 </body>
 </html>
