@@ -23,16 +23,17 @@
         function formatText(text) {
             if (!text) return '';
             
-            // Remplace les sauts de ligne intempestifs au milieu d'une URL
+            // Étape 1 : Nettoyer les sauts de ligne intempestifs coupant une URL
             let cleanedText = text.replace(/(https?:\/\/[^\s]+)\s+([^\s]+)/g, '$1$2');
 
-            // Regex qui capture l'URL en s'arrêtant proprement avant un mot parasite comme "Télécharger"
+            // Étape 2 : Regex universelle pour détecter les URL (gère les extensions .pdf, .html, .php et les paramètres avec ? ou &)
             const urlRegex = /(https?:\/\/[^\s<]+)/g;
 
             return cleanedText.replace(urlRegex, function(url) {
-                // Nettoie si le mot "Télécharger" ou un libellé similaire s'est collé à la fin
-                url = url.replace(/Télécharger.*$/, '');
+                // Nettoie les mots parasites collés courants à la fin (comme "Télécharger" ou "Propositions")
+                url = url.replace(/(Télécharger|Propositions).*$/, '');
                 
+                // Retire la ponctuation finale de fin de phrase s'il y en a une collée au lien
                 let cleanUrl = url.replace(/[.,;:)]$/, '');
                 let trailingChar = url.slice(cleanUrl.length);
                 
