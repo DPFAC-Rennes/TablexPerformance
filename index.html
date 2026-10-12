@@ -25,14 +25,14 @@
             // Nettoie les sauts de ligne intempestifs coupant une URL
             let cleanedText = text.replace(/(https?:\/\/[^\s]+)\s+([^\s]+)/g, '$1$2');
 
-            // Regex qui isole proprement l'URL jusqu'à l'extension (.pdf, .html, etc.) ou s'arrête avant un mot collé
-            const urlRegex = /(https?:\/\/[^\s<]+)/g;
+            // Regex ultra-précise : s'arrête net après .pdf, .html, .php ou un paramètre ? même s'il y a un mot collé derrière sans espace
+            const urlRegex = /(https?:\/\/[^\s<]+?(?:\.pdf|\.html|\.php|\?[^\s]*)?)(?=[A-ZÀ-ÖØ-Þ]|\s|$)/gi;
 
-            return cleanedText.replace(urlRegex, function(url) {
-                // Coupe net l'URL si elle contient l'une de ces extensions pour rejeter tout texte collé (Propositions, Télécharger, etc.)
-                const extensions = ['.pdf', '.html', '.php', '.aspx'];
+            return cleanedText.replace(urlRegex, function(match, url) {
+                // Si le texte collé s'est accroché à l'extension (ex: .pdfPropositions), on coupe pile à l'extension
+                const extensions = ['.pdf', '.html', '.php'];
                 for (let ext of extensions) {
-                    let index = url.indexOf(ext);
+                    let index = url.toLowerCase().indexOf(ext);
                     if (index !== -1) {
                         url = url.substring(0, index + ext.length);
                         break;
@@ -42,7 +42,7 @@
                 let cleanUrl = url.replace(/[.,;:)]$/, '');
                 let trailingChar = url.slice(cleanUrl.length);
                 
-                if (!cleanUrl.startsWith('http')) return url;
+                if (!cleanUrl.startsWith('http')) return match;
 
                 return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl} <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>${trailingChar}`;
             });
