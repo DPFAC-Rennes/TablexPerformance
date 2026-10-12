@@ -1,0 +1,353 @@
+<title>Chantiers DISP Rennes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout : panneau de chantier. En-tête signalétique, carte + frise par site, puis les "panneaux" de chaque opération. */
+:root{
+  --bg:#f3f4f2; --paper:#ffffff; --ink:#18232e; --muted:#5b6670; --line:#d6dad8;
+  --slate:#22384d;          /* bleu ardoise, maître d'ouvrage */
+  --moe:#2f6fb0;            /* maîtrise d'œuvre */
+  --moe-soft:#dde9f5;
+  --trx:#e0a400;            /* travaux, jaune chantier */
+  --trx-soft:#fbefc9; --trx-ink:#5a4200;
+  --land:#e3e7e4; --sea:#eef2f4; --coast:#9aa6ad;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Source Sans 3","Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"IBM Plex Mono",Consolas,"Courier New",monospace;
+  --fs:1rem;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11181f; --paper:#18222c; --ink:#e8ecef; --muted:#9aa7b2; --line:#2c3a46;
+  --slate:#9cc0e0; --moe:#6fa8e0; --moe-soft:#1d3247; --trx:#f2c234; --trx-soft:#3a2f0c; --trx-ink:#f7dc8a;
+  --land:#24313c; --sea:#151f28; --coast:#4c5c69; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11181f; --paper:#18222c; --ink:#e8ecef; --muted:#9aa7b2; --line:#2c3a46;
+  --slate:#9cc0e0; --moe:#6fa8e0; --moe-soft:#1d3247; --trx:#f2c234; --trx-soft:#3a2f0c; --trx-ink:#f7dc8a;
+  --land:#24313c; --sea:#151f28; --coast:#4c5c69; color-scheme:dark}
+html{font-size:calc(16px * var(--zoom,1))}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:1rem;line-height:1.5}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:grid;gap:28px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.05}
+.eyebrow{font-family:var(--mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tab{font-variant-numeric:tabular-nums}
+
+/* En-tête */
+header.top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:end;border-bottom:4px solid var(--ink);padding-bottom:18px}
+header.top h1{font-size:clamp(2.2rem,5vw,3.8rem);font-weight:700;letter-spacing:-.01em;text-transform:uppercase}
+header.top h1 span{color:var(--trx);-webkit-text-stroke:0}
+header.top p{margin:.4rem 0 0;max-width:62ch;color:var(--muted);font-size:1.05rem}
+.kpis{display:flex;gap:22px;flex-wrap:wrap}
+.kpi{display:grid}
+.kpi b{font-family:var(--display);font-size:2.4rem;font-weight:700;line-height:1}
+.kpi small{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+/* Barre d'outils */
+.tools{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.group{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.group > .eyebrow{margin-right:4px}
+button{font:inherit;cursor:pointer}
+.chip{border:1.5px solid var(--line);background:var(--paper);color:var(--ink);padding:5px 12px;border-radius:999px;font-size:.9rem;font-weight:600}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip.moe[aria-pressed="true"]{background:var(--moe);border-color:var(--moe);color:#fff}
+.chip.trx[aria-pressed="true"]{background:var(--trx);border-color:var(--trx);color:#1d1600}
+.chip:focus-visible,.site:focus-visible,.op:focus-visible,.pin:focus-visible{outline:3px solid var(--moe);outline-offset:2px}
+.spacer{flex:1}
+
+/* Carte + frise */
+.board{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,9fr);gap:24px;align-items:start}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.panel h2{font-size:1.5rem;text-transform:uppercase;margin-bottom:8px}
+svg.map{width:100%;height:auto;display:block}
+.map .sea{fill:var(--sea)} .map .land{fill:var(--land);stroke:var(--coast);stroke-width:1.2}
+.map text{font-family:var(--display);font-weight:600;fill:var(--ink);font-size:15px}
+.map .pin{cursor:pointer}
+.map .pin circle.halo{fill:var(--trx);opacity:.25}
+.map .pin circle.dot{fill:var(--slate);stroke:var(--paper);stroke-width:2}
+.map .pin.dim{opacity:.25}
+.map .pin.on circle.halo{opacity:.55}
+.map .note{font-family:var(--mono);font-size:10px;fill:var(--muted);font-weight:400}
+
+.timeline{overflow-x:auto}
+.tl{min-width:720px;display:grid;gap:0}
+.tl-head,.lane{display:grid;grid-template-columns:150px repeat(7,minmax(0,1fr));}
+.tl-head div{font-family:var(--display);font-weight:700;font-size:1.15rem;padding:4px 6px;border-bottom:2px solid var(--ink)}
+.tl-head div.tbd{color:var(--muted)}
+.lane{border-bottom:1px solid var(--line);padding-block:6px}
+.lane.dim{opacity:.3}
+.site{grid-column:1;grid-row:1 / span 20;text-align:left;background:none;border:0;padding:4px 6px;color:var(--ink);align-self:start}
+.site b{display:block;font-family:var(--display);font-size:1.15rem;line-height:1.1}
+.site small{color:var(--muted);font-size:.78rem;line-height:1.2;display:block}
+.cells{grid-column:2 / span 7;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-flow:row dense;gap:4px}
+.cells .grid-bg{display:none}
+.op{border:0;text-align:left;border-radius:4px;padding:4px 7px;font-size:.8rem;line-height:1.2;min-width:0;overflow:hidden}
+.op .t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-weight:600;overflow:hidden;hyphens:auto}
+.op .m{font-family:var(--mono);font-size:.68rem;white-space:nowrap;display:block;overflow:hidden;text-overflow:ellipsis}
+.op.MOE{background:var(--moe-soft);color:var(--ink);box-shadow:inset 3px 0 0 var(--moe)}
+.op.TRX{background:var(--trx-soft);color:var(--trx-ink);box-shadow:inset 3px 0 0 var(--trx)}
+.op.tbdyear{background-image:repeating-linear-gradient(135deg,transparent 0 6px,color-mix(in srgb,var(--line) 60%,transparent) 6px 7px)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+
+/* Panneaux de chantier */
+.signs-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px}
+.signs-head h2{font-size:1.9rem;text-transform:uppercase}
+.signs{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+.sign{background:var(--paper);border:2px solid var(--ink);border-radius:3px;display:grid;grid-template-rows:auto 1fr auto;min-width:0}
+.sign.flash{animation:flash 1.2s ease-out}
+@keyframes flash{0%{box-shadow:0 0 0 6px var(--trx)}100%{box-shadow:0 0 0 0 transparent}}
+.sign .band{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;font-family:var(--display);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.sign.MOE .band{background:var(--moe);color:#fff}
+.sign.TRX .band{background:var(--trx);color:#1d1600}
+.sign .body{padding:10px 12px;display:grid;gap:8px;align-content:start}
+.sign h3{font-size:1.35rem;font-weight:600}
+.sign dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 10px;font-size:.88rem}
+.sign dt{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:2px}
+.sign dd{margin:0}
+.sign .foot{border-top:2px solid var(--ink);padding:6px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sign .amt{font-family:var(--display);font-size:1.6rem;font-weight:700}
+.sign .amt.pending{font-size:1.05rem;color:var(--muted)}
+.sign .yr{font-family:var(--mono);font-size:.8rem}
+
+/* Bas de page */
+.cta{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;border-top:4px solid var(--ink);padding-top:18px}
+.cta h3{font-size:1.3rem;text-transform:uppercase;margin-bottom:4px}
+.cta p{margin:0;color:var(--muted);max-width:60ch}
+.cta a{color:var(--moe);font-weight:600}
+.placeholder{background:var(--trx-soft);color:var(--trx-ink);padding:0 4px;border-radius:2px}
+.fine{font-size:.78rem;color:var(--muted)}
+
+@media (max-width:900px){.board{grid-template-columns:1fr} header.top{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.sign.flash{animation:none}}
+body.proj{--zoom:1.25}
+</style>
+
+<div class="wrap" lang="fr">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Direction interrégionale des services pénitentiaires de Rennes · Pôle achats</div>
+      <h1>Nos chantiers <span>2026–2031</span></h1>
+      <p>Maîtrise d'œuvre et travaux sur les établissements pénitentiaires bretons. Repérez les opérations qui correspondent à votre métier et préparez-vous avant la publication des consultations.</p>
+    </div>
+    <div class="kpis" id="kpis"></div>
+  </header>
+
+  <div class="tools">
+    <div class="group" role="group" aria-label="Type de marché">
+      <span class="eyebrow">Type</span>
+      <button class="chip" data-type="ALL" aria-pressed="true">Tout</button>
+      <button class="chip moe" data-type="MOE" aria-pressed="false">Maîtrise d'œuvre</button>
+      <button class="chip trx" data-type="TRX" aria-pressed="false">Travaux</button>
+    </div>
+    <div class="group" role="group" aria-label="Montants">
+      <span class="eyebrow">Montants</span>
+      <button class="chip" id="amtRange" aria-pressed="true">Fourchettes</button>
+      <button class="chip" id="amtExact" aria-pressed="false">Estimations HT</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="group">
+      <button class="chip" id="reset">Tous les sites</button>
+      <button class="chip" id="proj" aria-pressed="false">Mode projection</button>
+    </div>
+  </div>
+
+  <section class="board">
+    <div class="panel">
+      <h2>Où ?</h2>
+      <svg class="map" id="map" viewBox="0 0 700 400" role="img" aria-label="Carte de la Bretagne et des sites concernés"></svg>
+    </div>
+    <div class="panel">
+      <h2>Quand ?</h2>
+      <div class="timeline"><div class="tl" id="tl"></div></div>
+      <div class="legend">
+        <span><i style="background:var(--moe)"></i>Maîtrise d'œuvre</span>
+        <span><i style="background:var(--trx)"></i>Travaux</span>
+        <span>Année de publication prévisionnelle de la consultation</span>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:14px">
+    <div class="signs-head">
+      <h2 id="signsTitle">Toutes les opérations</h2>
+      <span class="eyebrow" id="signsCount"></span>
+    </div>
+    <div class="signs" id="signs"></div>
+  </section>
+
+  <footer class="cta">
+    <div>
+      <h3>Être prêt le jour J</h3>
+      <p>Nos consultations sont publiées sur PLACE, la plateforme des achats de l'État. Créez votre compte et une alerte sur nos marchés : <a href="https://www.marches-publics.gouv.fr" target="_blank" rel="noopener">marches-publics.gouv.fr</a></p>
+    </div>
+    <div>
+      <h3>Nous contacter</h3>
+      <p>Pôle achats, DISP de Rennes<br><span class="placeholder">[adresse e-mail du pôle achats à compléter]</span></p>
+    </div>
+    <div>
+      <h3>À savoir</h3>
+      <p>Les sites pénitentiaires imposent des contraintes particulières : accès contrôlés, habilitation du personnel, travaux en milieu occupé. Nous les détaillons dans chaque dossier de consultation.</p>
+    </div>
+    <p class="fine" style="grid-column:1/-1">Programmation prévisionnelle et non contractuelle, susceptible d'évoluer (calendrier, montants, allotissement). Positions sur la carte indicatives.</p>
+  </footer>
+</div>
+
+<script>
+const SITES = {
+  brest:   {name:"Brest", kind:"Maison d'arrêt", lon:-4.475, lat:48.415, dx:10, dy:-10},
+  stbrieuc:{name:"Saint-Brieuc", kind:"Maison d'arrêt", lon:-2.766, lat:48.515, dx:-10, dy:-12, anchor:"end"},
+  stmalo:  {name:"Saint-Malo", kind:"Maison d'arrêt", lon:-2.000, lat:48.642, dx:10, dy:-8},
+  rennesD: {name:"Rennes · DISP", kind:"Direction interrégionale", lon:-1.640, lat:48.090, dx:12, dy:18},
+  cpf:     {name:"Rennes · CPF", kind:"Centre pénitentiaire pour femmes", lon:-1.672, lat:48.104, dx:12, dy:2},
+  vezin:   {name:"Rennes-Vezin", kind:"Centre pénitentiaire pour hommes", lon:-1.745, lat:48.118, dx:-12, dy:-10, anchor:"end"},
+  lorient: {name:"Lorient-Ploemeur", kind:"Centre pénitentiaire", lon:-3.410, lat:47.725, dx:10, dy:-10},
+  vannes:  {name:"Vannes · PREJ", kind:"Pôle régional d'extraction judiciaire", lon:-2.758, lat:47.658, dx:10, dy:16},
+};
+// y: année de publication (nombre, [début,fin] ou null = à dater) ; m: estimation HT (null = en cours d'évaluation)
+const OPS = [
+ ["brest","MOE","Mise en accessibilité",2028,42000,null],
+ ["brest","TRX","Mise en accessibilité",null,null,"≈ 3 lots"],
+ ["brest","TRX","Vidéosurveillance",2027,660000,"Lot unique"],
+ ["rennesD","TRX","Réhabilitation de l'ancien logement",null,350000,"À définir"],
+ ["rennesD","TRX","Construction de la base opérationnelle",2026,14983935,"5 lots"],
+ ["rennesD","TRX","Restructuration du bâtiment A",null,900000,"À définir"],
+ ["lorient","TRX","Travaux de désamiantage",[2026,2027],3333333,"≈ 3 lots"],
+ ["lorient","MOE","Mise en accessibilité",2028,50000,null],
+ ["lorient","TRX","Mise en accessibilité",null,null,"À définir"],
+ ["cpf","MOE","Réfection des façades",[2026,2027],150000,null],
+ ["cpf","TRX","Réfection des façades",null,2800000,"≈ 2 lots"],
+ ["cpf","TRX","Réaménagement des guérites de surveillance des cours de promenade",2028,359000,"Lot unique"],
+ ["cpf","MOE","Sous-stations Nord, Sud, Est",[2026,2027],216000,null],
+ ["cpf","TRX","Sous-stations Nord, Sud, Est",2027,1100000,"Lot unique"],
+ ["cpf","MOE","Mise en sécurité incendie : détection",[2026,2027],516000,null],
+ ["cpf","TRX","Mise en sécurité incendie : détection",2028,4200000,"≈ 2 lots"],
+ ["cpf","MOE","Mise en sécurité incendie : désenfumage",2029,450000,null],
+ ["cpf","TRX","Mise en sécurité incendie : désenfumage",2030,4700000,"≈ 2 lots"],
+ ["cpf","MOE","Mise en sécurité incendie : compartimentage",2030,310000,null],
+ ["cpf","TRX","Mise en sécurité incendie : compartimentage",2031,3200000,"≈ 2 lots"],
+ ["cpf","TRX","Mise en accessibilité",2028,306000,"≈ 3 lots"],
+ ["vezin","MOE","Déconstruction-reconstruction de la zone parloir et bureau surveillant (QSL)",null,85000,null],
+ ["vezin","TRX","Déconstruction-reconstruction de la zone parloir et bureau surveillant (QSL)",2027,658333,"≈ 5 lots"],
+ ["vezin","TRX","Rénovation de cellules",2027,750000,"≈ 3 lots"],
+ ["stbrieuc","TRX","Réfection des douches",2027,220250,"5 lots"],
+ ["stmalo","TRX","Rénovation du quartier de semi-liberté",null,555000,"À définir"],
+ ["stmalo","TRX","Réhabilitation de la cuisine en liaison chaude",null,534000,"À définir"],
+ ["stmalo","MOE","Mise en sécurité",2027,null,null],
+ ["stmalo","TRX","Mise en sécurité",null,null,"≈ 3 lots"],
+ ["vannes","TRX","Extension des vestiaires du PREJ 56",2028,141667,"4 lots"],
+].map((r,i)=>({id:"op"+i,site:r[0],type:r[1],title:r[2],year:r[3],amount:r[4],lots:r[5]}));
+
+const YEARS=[2026,2027,2028,2029,2030,2031];
+const state={type:"ALL",site:null,exact:false};
+try{const s=JSON.parse(localStorage.getItem("chantiers-state")||"{}");if(typeof s.exact==="boolean")state.exact=s.exact;}catch(e){}
+const save=()=>{try{localStorage.setItem("chantiers-state",JSON.stringify({exact:state.exact}))}catch(e){}};
+
+const nf=(n,d)=>n.toLocaleString("fr-FR",{maximumFractionDigits:d,minimumFractionDigits:d});
+function exact(m){ if(m>=1e6) return nf(m/1e6,2)+" M€"; return nf(Math.round(m/1000),0)+" k€"; }
+function range(m){
+  if(m<100e3) return "< 100 k€"; if(m<500e3) return "100 – 500 k€"; if(m<1e6) return "0,5 – 1 M€";
+  if(m<3e6) return "1 – 3 M€"; if(m<5e6) return "3 – 5 M€"; if(m<10e6) return "5 – 10 M€"; return "> 10 M€";
+}
+const amt=m=> m==null ? null : (state.exact?exact(m):range(m));
+const yearLabel=y=> y==null?"À dater": Array.isArray(y)? y[0]+"–"+y[1] : String(y);
+const typeLabel=t=> t==="MOE"?"Maîtrise d'œuvre":"Travaux";
+const visible=o=> state.type==="ALL"||o.type===state.type;
+
+/* KPIs */
+function renderKpis(){
+  const ops=OPS.filter(visible);
+  const total=ops.reduce((s,o)=>s+(o.amount||0),0);
+  const sites=new Set(ops.map(o=>o.site)).size;
+  document.getElementById("kpis").innerHTML=
+    `<div class="kpi"><b class="tab">${ops.length}</b><small>opérations</small></div>
+     <div class="kpi"><b class="tab">${sites}</b><small>sites</small></div>
+     <div class="kpi"><b class="tab">≈ ${nf(Math.round(total/1e6),0)} M€</b><small>HT estimés</small></div>`;
+}
+
+/* Carte */
+const proj=(lon,lat)=>[((lon+4.88)*0.669)*228+14,(48.92-lat)*228+12];
+const COAST=[[-1.51,48.62],[-1.68,48.62],[-1.86,48.69],[-1.97,48.66],[-2.13,48.62],[-2.29,48.66],[-2.33,48.68],[-2.48,48.64],[-2.68,48.55],[-2.78,48.52],[-2.87,48.60],[-3.03,48.79],[-3.22,48.84],[-3.44,48.82],[-3.58,48.79],[-3.57,48.70],[-3.85,48.66],[-3.97,48.72],[-4.18,48.69],[-4.42,48.65],[-4.59,48.61],[-4.77,48.52],[-4.78,48.36],[-4.62,48.34],[-4.45,48.38],[-4.30,48.30],[-4.55,48.29],[-4.62,48.25],[-4.52,48.17],[-4.30,48.10],[-4.45,48.10],[-4.73,48.04],[-4.50,47.99],[-4.37,47.89],[-4.37,47.80],[-4.17,47.83],[-3.98,47.86],[-3.92,47.87],[-3.75,47.79],[-3.53,47.76],[-3.40,47.70],[-3.21,47.66],[-3.12,47.57],[-3.13,47.48],[-3.05,47.58],[-2.92,47.55],[-2.80,47.50],[-2.62,47.52],[-2.48,47.49],[-2.45,47.43],[-2.30,47.52],[-2.10,47.62],[-1.95,47.70],[-1.68,47.80],[-1.45,47.81],[-1.24,47.78],[-1.10,47.95],[-1.02,48.10],[-1.06,48.30],[-1.07,48.45],[-1.18,48.55],[-1.35,48.58]];
+function renderMap(){
+  const svg=document.getElementById("map");
+  const pts=COAST.map(p=>proj(...p).map(v=>v.toFixed(1)).join(",")).join(" ");
+  let h=`<rect class="sea" x="0" y="0" width="700" height="400"/><polygon class="land" points="${pts}"/>
+    <text class="note" x="20" y="388">Manche ↑   Atlantique ↙   Position des sites indicative</text>`;
+  for(const [k,s] of Object.entries(SITES)){
+    const ops=OPS.filter(o=>o.site===k&&visible(o));
+    const tot=ops.reduce((a,o)=>a+(o.amount||0),0);
+    const r=6+Math.sqrt(tot/1e6)*4.2;
+    const [x,y]=proj(s.lon,s.lat);
+    const cls=["pin",(!ops.length||(state.site&&state.site!==k))?"dim":"",state.site===k?"on":""].join(" ");
+    h+=`<g class="${cls}" data-site="${k}" tabindex="0" role="button" aria-label="${s.name}, ${ops.length} opérations">
+      <circle class="halo" cx="${x}" cy="${y}" r="${r.toFixed(1)}"/>
+      <circle class="dot" cx="${x}" cy="${y}" r="5"/>
+      <text x="${x+s.dx}" y="${y+s.dy}" text-anchor="${s.anchor||"start"}">${s.name} <tspan class="note">${ops.length}</tspan></text></g>`;
+  }
+  svg.innerHTML=h;
+}
+
+/* Frise */
+function col(y){
+  if(y==null) return [7,8];
+  if(Array.isArray(y)) return [YEARS.indexOf(y[0])+1,YEARS.indexOf(y[1])+2];
+  return [YEARS.indexOf(y)+1,YEARS.indexOf(y)+2];
+}
+function renderTimeline(){
+  let h=`<div class="tl-head"><div></div>${YEARS.map(y=>`<div class="tab">${y}</div>`).join("")}<div class="tbd">À dater</div></div>`;
+  for(const [k,s] of Object.entries(SITES)){
+    const ops=OPS.filter(o=>o.site===k&&visible(o));
+    if(!ops.length) continue;
+    const dim=state.site&&state.site!==k?" dim":"";
+    h+=`<div class="lane${dim}"><button class="site" data-site="${k}"><b>${s.name}</b><small>${s.kind}</small></button><div class="cells">`;
+    for(const o of ops){
+      const [a,b]=col(o.year);
+      const m=amt(o.amount);
+      h+=`<button class="op ${o.type}${o.year==null?" tbdyear":""}" style="grid-column:${a}/${b}" data-op="${o.id}" title="${typeLabel(o.type)} · ${o.title}">
+        <span class="t">${o.title}</span><span class="m">${o.type}${m?" · "+m:""}</span></button>`;
+    }
+    h+=`</div></div>`;
+  }
+  document.getElementById("tl").innerHTML=h;
+}
+
+/* Panneaux */
+function renderSigns(){
+  const ops=OPS.filter(o=>visible(o)&&(!state.site||o.site===state.site));
+  ops.sort((a,b)=>{const ya=a.year==null?9999:(Array.isArray(a.year)?a.year[0]:a.year), yb=b.year==null?9999:(Array.isArray(b.year)?b.year[0]:b.year);return ya-yb||(b.amount||0)-(a.amount||0)});
+  document.getElementById("signsTitle").textContent= state.site? SITES[state.site].name : "Toutes les opérations";
+  document.getElementById("signsCount").textContent= ops.length+" opération"+(ops.length>1?"s":"");
+  document.getElementById("signs").innerHTML=ops.map(o=>{
+    const s=SITES[o.site], m=amt(o.amount);
+    return `<article class="sign ${o.type}" id="${o.id}">
+      <div class="band"><span>${typeLabel(o.type)}</span><span class="yr tab">${yearLabel(o.year)}</span></div>
+      <div class="body"><h3>${o.title}</h3>
+        <dl><dt>Site</dt><dd>${s.kind}, ${s.name.replace(" · DISP","").replace(" · CPF","").replace(" · PREJ","")}</dd>
+        <dt>Allotissement</dt><dd>${o.type==="MOE"?"Marché de maîtrise d'œuvre":(o.lots||"À définir")}</dd>
+        <dt>Publication</dt><dd>${o.year==null?"Calendrier à préciser":"Prévue en "+yearLabel(o.year)}</dd></dl></div>
+      <div class="foot"><span class="eyebrow">Estimation HT</span>${m?`<span class="amt tab">${m}</span>`:`<span class="amt pending">En cours d'évaluation</span>`}</div>
+    </article>`}).join("");
+}
+
+function render(){renderKpis();renderMap();renderTimeline();renderSigns();
+  document.getElementById("amtRange").setAttribute("aria-pressed",!state.exact);
+  document.getElementById("amtExact").setAttribute("aria-pressed",state.exact);
+  document.querySelectorAll("[data-type]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.type===state.type));
+}
+function pickSite(k){state.site=state.site===k?null:k;render();}
+
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-type]"); if(t){state.type=t.dataset.type;render();return;}
+  const s=e.target.closest("[data-site]"); if(s){pickSite(s.dataset.site);return;}
+  const o=e.target.closest("[data-op]");
+  if(o){const op=OPS.find(x=>x.id===o.dataset.op); if(state.site&&state.site!==op.site){state.site=op.site;render();}
+    const el=document.getElementById(op.id); if(el){el.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash");}}
+});
+document.getElementById("map").addEventListener("keydown",e=>{const g=e.target.closest(".pin");if(g&&(e.key==="Enter"||e.key===" ")){e.preventDefault();pickSite(g.dataset.site);}});
+document.getElementById("amtRange").onclick=()=>{state.exact=false;save();render();};
+document.getElementById("amtExact").onclick=()=>{state.exact=true;save();render();};
+document.getElementById("reset").onclick=()=>{state.site=null;state.type="ALL";render();};
+document.getElementById("proj").onclick=async e=>{
+  const on=document.body.classList.toggle("proj"); e.currentTarget.setAttribute("aria-pressed",on);
+  try{ if(on&&!document.fullscreenElement) await document.documentElement.requestFullscreen(); else if(!on&&document.fullscreenElement) await document.exitFullscreen(); }catch(err){}
+};
+render();
+</script>
