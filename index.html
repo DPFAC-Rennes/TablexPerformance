@@ -22,37 +22,38 @@
         function formatText(text) {
             if (!text) return '';
             
-            let cleaned = text.replace(/\r?\n/g, ' ');
+            // On découpe le texte par mots pour analyser chaque bloc séparément
+            let words = text.split(/\s+/);
+            
+            return words.map(word => {
+                // Si le mot contient une URL
+                if (word.startsWith('http://') || word.startsWith('https://')) {
+                    let cleanUrl = word;
+                    let suffix = '';
 
-            // Regex ultra-robuste : capture une URL en s'arrêtant strictement à l'extension (.pdf, .html, .php) ou au paramètre (?)
-            // tout en ignorant tout ce qui est collé après (comme "Propositions" ou "Télécharger").
-            const exactUrlRegex = /(https?:\/\/[^\s]+?(\.pdf|\.html|\.php|\?[^\s]*)?)(?=[A-ZÀ-ÖØ-Þa-z0-9]*(?:Propositions|Télécharger)|[^\w\-\./\?=&%]|$)/gi;
+                    // On cherche explicitement la fin des extensions connues dans le mot
+                    ['.pdf', '.html', '.php', '.aspx'].forEach(ext => {
+                        let idx = cleanUrl.toLowerCase().indexOf(ext);
+                        if (idx !== -1) {
+                            let cutIndex = idx + ext.length;
+                            // Tout ce qui dépasse après l'extension est isolé (ex: Propositions)
+                            suffix = cleanUrl.substring(cutIndex);
+                            cleanUrl = cleanUrl.substring(0, cutIndex);
+                        }
+                    });
 
-            // Alternative directe par découpage d'extension si la regex croise un mot collé attaché
-            // On s'assure que .pdf / .html / .php est le point de coupure final de l'URL si un mot commence par une majuscule juste après.
-            let formatted = cleaned.replace(/(https?:\S+?)(\.pdf|\.html|\.php)([A-ZÀ-ÖØ-Þ]\w*)/gi, function(match, base, ext, attachedWord) {
-                return `${base}${ext} ${attachedWord}`;
-            });
-
-            // On applique ensuite la transformation standard des liens propres
-            const urlRegex = /(https?:\/\/[^\s<]+)/g;
-
-            return formatted.replace(urlRegex, function(url) {
-                ['.pdf', '.html', '.php'].forEach(ext => {
-                    let idx = url.toLowerCase().indexOf(ext);
-                    if (idx !== -1) {
-                        // On coupe pile après l'extension pour rejeter les mots parasites collés
-                        url = url.substring(0, idx + ext.length);
+                    // Nettoyage de la ponctuation finale de l'URL si besoin
+                    let lastChar = cleanUrl.slice(-1);
+                    if ([',', ';', '.', ')'].includes(lastChar)) {
+                        suffix = lastChar + suffix;
+                        cleanUrl = cleanUrl.slice(0, -1);
                     }
-                });
 
-                let cleanUrl = url.replace(/[.,;:)]$/, '');
-                let trailingChar = url.slice(cleanUrl.length);
-
-                if (!cleanUrl.startsWith('http')) return url;
-
-                return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl} <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>${trailingChar}`;
-            });
+                    let linkHtml = `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl} <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>`;
+                    return linkHtml + suffix;
+                }
+                return word;
+            }).join(' ');
         }
 
         grist.ready({
