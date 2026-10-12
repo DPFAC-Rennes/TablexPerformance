@@ -14,7 +14,7 @@
 </head>
 <body class="p-3 h-screen flex flex-col">
 
-    <!-- BARRE DE RECHERCHE HARMONISÉE -->
+    <!-- BARRE DE RECHERCHE -->
     <div class="mb-3 relative">
         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
         <input type="text" id="searchInput" placeholder="Rechercher un GM, libellé, segment..." 
@@ -68,7 +68,6 @@
             container.innerHTML = filtered.map(item => {
                 const isSelected = item.id === selectedRecordId;
                 
-                // Style identique aux blocs de droite selon l'état sélectionné
                 const activeClass = isSelected 
                     ? 'bg-slate-900 border-emerald-500 shadow-lg ring-1 ring-emerald-500/50' 
                     : 'bg-slate-900/80 border-slate-700/70 hover:bg-slate-900 hover:border-slate-600';
@@ -76,11 +75,12 @@
                 return `
                     <div onclick="selectGM(${item.id})" 
                         class="p-3.5 rounded-xl border transition cursor-pointer ${activeClass}">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="bg-indigo-600/30 border border-indigo-500/50 text-indigo-300 px-2.5 py-1 rounded-lg font-mono font-bold text-xs shadow-inner">
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <div class="bg-indigo-600/30 border border-indigo-500/50 text-indigo-300 px-2.5 py-1 rounded-lg font-mono font-bold text-xs shadow-inner shrink-0">
                                 <i class="fa-solid fa-barcode mr-1.5 text-indigo-400"></i>${item.GM || 'N/A'}
                             </div>
-                            <span class="text-[11px] text-emerald-400 font-semibold truncate max-w-[140px] px-2 py-0.5 bg-emerald-950/30 border border-emerald-900/40 rounded-md">
+                            <!-- Le segment s'adapte et passe à la ligne proprement si besoin au lieu d'être coupé -->
+                            <span class="text-[11px] text-emerald-400 font-semibold text-right px-2 py-1 bg-emerald-950/30 border border-emerald-900/40 rounded-md leading-tight">
                                 ${item.Segment || 'Général'}
                             </span>
                         </div>
@@ -98,5 +98,8 @@
             grist.setSelectedRecordId(id);
         }
     </script>
+</body>
+</html>
+
 </body>
 </html>
