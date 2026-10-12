@@ -22,40 +22,41 @@
         function formatText(text) {
             if (!text) return '';
             
-            // 1. Coupe net les mots parasites collés aux extensions de fichiers dans les URL
+            // 1. Coupe net les mots parasites collés aux extensions dans les URL
             let cleaned = text.replace(/(\.pdf|\.html|\.php)(Propositions|Télécharger)/gi, '$1 $2');
             
-            // 2. Remplace chaque " - " (tiret avec espaces, hors URL) par un saut de ligne et un tiret propre
-            // On s'assure de ne pas casser le "%20-" des liens en vérifiant qu'il n'y a pas de http:// ou https:// avant sur la même ligne ou un %20
-            cleaned = cleaned.replace(/\s+-\s+/g, '\n- ');
+            // 2. Transforme les tirets séparés par des espaces en de vrais retours à la ligne avec puces HTML
+            // On ignore les tirets précédés de %20 (pour ne pas casser les liens)
+            cleaned = cleaned.replace(/([^%]\s+)-(\s+)/g, '<br><br>• ');
 
-            // 3. Découpage par mots pour transformer les liens proprement
-            let words = cleaned.split(/\s+/);
-            
-            return words.map(word => {
-                if (word.startsWith('http://') || word.startsWith('https://')) {
-                    let cleanUrl = word;
-                    let suffix = '';
+            // 3. Détection et transformation des liens URL en balises <a> cliquables
+            const urlRegex = /(https?:\/\/[^\s<]+)/g;
 
-                    ['.pdf', '.html', '.php', '.aspx'].forEach(ext => {
-                        let idx = cleanUrl.toLowerCase().indexOf(ext);
-                        if (idx !== -1) {
-                            let cutIndex = idx + ext.length;
-                            suffix = cleanUrl.substring(cutIndex);
-                            cleanUrl = cleanUrl.substring(0, cutIndex);
-                        }
-                    });
-
-                    let lastChar = cleanUrl.slice(-1);
-                    if ([',', ';', '.', ')'].includes(lastChar)) {
-                        suffix = lastChar + suffix;
-                        cleanUrl = cleanUrl.slice(0, -1);
+            return cleaned.replace(urlRegex, function(url) {
+                ['.pdf', '.html', '.php', '.aspx'].forEach(ext => {
+                    let idx = url.toLowerCase().indexOf(ext);
+                    if (idx !== -1) {
+                        let cutIndex = idx + ext.length;
+                        let suffix = url.substring(cutIndex);
+                        url = url.substring(0, cutIndex) + suffix;
                     }
+                });
 
-                    return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl} <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>${suffix}`;
-                }
-                return word;
-            }).join(' ');
+                // Nettoyage des extensions si un mot s'est collé sans espace
+                ['.pdf', '.html', '.php', '.aspx'].forEach(ext => {
+                    let idx = url.toLowerCase().indexOf(ext);
+                    if (idx !== -1) {
+                        url = url.substring(0, idx + ext.length);
+                    }
+                });
+
+                let cleanUrl = url.replace(/[.,;:)]$/, '');
+                let trailingChar = url.slice(cleanUrl.length);
+
+                if (!cleanUrl.startsWith('http')) return url;
+
+                return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl} <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>${trailingChar}`;
+            });
         }
 
         grist.ready({
@@ -136,7 +137,7 @@
                             </div>
                             <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 overflow-hidden">
                                 <span class="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center mb-1">
-                                    <i class="fa-solid fa-tree mr-1.5"></i> Recommandations Déforestation
+                                    <i class="fa-solid tab-tree mr-1.5"></i> Recommandations Déforestation
                                 </span>
                                 <div class="text-slate-200 text-sm content-text">${formatText(data.Recommandations_Deforestation) || 'Aucune'}</div>
                             </div>
