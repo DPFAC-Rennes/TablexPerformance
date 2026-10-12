@@ -22,25 +22,30 @@
         function formatText(text) {
             if (!text) return '';
             
-            // On nettoie les sauts de ligne intempestifs
             let cleaned = text.replace(/\r?\n/g, ' ');
 
-            // On cherche les extensions et on force la coupure si des mots sont collés juste après sans espace
-            ['.pdf', '.html', '.php', '.aspx'].forEach(ext => {
-                let pos = 0;
-                while ((pos = cleaned.toLowerCase().indexOf(ext, pos)) !== -1) {
-                    let endPos = pos + ext.length;
-                    // Si le caractère suivant n'est ni un espace, ni une ponctuation, ni la fin de chaîne, c'est qu'un mot est collé (ex: .pdfPropositions)
-                    if (endPos < cleaned.length && !/\s|[.,;:)]/.test(cleaned[endPos])) {
-                        cleaned = cleaned.substring(0, endPos) + ' ' + cleaned.substring(endPos);
-                    }
-                    pos = endPos;
-                }
+            // Regex ultra-robuste : capture une URL en s'arrêtant strictement à l'extension (.pdf, .html, .php) ou au paramètre (?)
+            // tout en ignorant tout ce qui est collé après (comme "Propositions" ou "Télécharger").
+            const exactUrlRegex = /(https?:\/\/[^\s]+?(\.pdf|\.html|\.php|\?[^\s]*)?)(?=[A-ZÀ-ÖØ-Þa-z0-9]*(?:Propositions|Télécharger)|[^\w\-\./\?=&%]|$)/gi;
+
+            // Alternative directe par découpage d'extension si la regex croise un mot collé attaché
+            // On s'assure que .pdf / .html / .php est le point de coupure final de l'URL si un mot commence par une majuscule juste après.
+            let formatted = cleaned.replace(/(https?:\S+?)(\.pdf|\.html|\.php)([A-ZÀ-ÖØ-Þ]\w*)/gi, function(match, base, ext, attachedWord) {
+                return `${base}${ext} ${attachedWord}`;
             });
 
-            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            // On applique ensuite la transformation standard des liens propres
+            const urlRegex = /(https?:\/\/[^\s<]+)/g;
 
-            return cleaned.replace(urlRegex, function(url) {
+            return formatted.replace(urlRegex, function(url) {
+                ['.pdf', '.html', '.php'].forEach(ext => {
+                    let idx = url.toLowerCase().indexOf(ext);
+                    if (idx !== -1) {
+                        // On coupe pile après l'extension pour rejeter les mots parasites collés
+                        url = url.substring(0, idx + ext.length);
+                    }
+                });
+
                 let cleanUrl = url.replace(/[.,;:)]$/, '');
                 let trailingChar = url.slice(cleanUrl.length);
 
