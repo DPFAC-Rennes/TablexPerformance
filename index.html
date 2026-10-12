@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+    </style>
+</head>
+<body class="p-4">
+
+    <div id="app" class="max-w-4xl mx-auto space-y-4">
+        <div class="text-center text-slate-400 py-10">Chargement des données de la fiche...</div>
+    </div>
+
+    <script>
+        grist.ready({
+            requiredColumns: [
+                "GM", "Libelle_du_GM", "Segment", "Art_58_Loi_AGEC", 
+                "Categorie_AGEC", "Recommandations_AGEC", "Recommandations_Filieres", 
+                "Recommandations_Deforestation", "Clauses_et_Recommandations_Environnementales", 
+                "Clauses_et_Recommandations_Sociales"
+            ]
+        });
+
+        grist.onRecord(function(record, mappings) {
+            const data = grist.mapColumnNames(record) || record;
+            
+            if (!data || Object.keys(data).length === 0) {
+                document.getElementById('app').innerHTML = `<div class="text-center text-slate-500 py-10">Aucune fiche sélectionnée.</div>`;
+                return;
+            }
+
+            const html = `
+                <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-xl overflow-hidden">
+                    
+                    <!-- EN-TÊTE : GM & Libellé -->
+                    <div class="bg-gradient-to-r from-indigo-900/60 to-slate-900 p-5 border-b border-slate-800 flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-indigo-600/30 border border-indigo-500/50 text-indigo-300 px-4 py-2 rounded-xl font-mono font-bold text-lg shadow-inner">
+                                <i class="fa-solid fa-barcode mr-2 text-indigo-400"></i>${data.GM || 'N/A'}
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-[250px]">
+                            <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold block mb-1">Libellé du GM</span>
+                            <h2 class="text-xl font-bold text-white tracking-tight">${data.Libelle_du_GM || 'Sans libellé'}</h2>
+                        </div>
+                    </div>
+
+                    <!-- CORPS DU WIDGET -->
+                    <div class="p-6 space-y-5">
+
+                        <!-- Grille Segment & Art. 58 AGEC -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
+                                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center mb-1">
+                                    <i class="fa-solid fa-layer-group mr-1.5"></i> Segment
+                                </span>
+                                <p class="text-slate-200 text-sm">${data.Segment || 'Aucun segment défini'}</p>
+                            </div>
+                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
+                                <span class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center mb-1">
+                                    <i class="fa-solid fa-scale-balanced mr-1.5"></i> Art. 58 Loi AGEC
+                                </span>
+                                <p class="text-slate-200 text-sm">${data.Art_58_Loi_AGEC || 'Non renseigné'}</p>
+                            </div>
+                        </div>
+
+                        <!-- Catégorie & Recommandations AGEC -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
+                                <span class="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center mb-1">
+                                    <i class="fa-solid fa-tags mr-1.5"></i> Catégorie AGEC
+                                </span>
+                                <p class="text-slate-200 text-sm">${data.Categorie_AGEC || 'Non renseignée'}</p>
+                            </div>
+                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
+                                <span class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center mb-1">
+                                    <i class="fa-solid fa-lightbulb mr-1.5"></i> Recommandations AGEC
+                                </span>
+                                <p class="text-slate-200 text-sm">${data.Recommandations_AGEC || 'Aucune'}</p>
+                            </div>
+                        </div>
+
+                        <!-- Recommandations Filières & Déforestation -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
+                                <span class="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center mb-1">
+                                    <i class="fa-solid fa-industry mr-1.5"></i> Recommandations Filières
+                                </span>
+                                <p class="text-slate-200 text-sm">${data.Recommandations_Filieres || 'Aucune'}</p>
+                            </div>
+                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
+                                <span class="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center mb-1">
+                                    <i class="fa-solid fa-tree mr-1.5"></i> Recommandations Déforestation
+                                </span>
+                                <p class="text-slate-200 text-sm">${data.Recommandations_Deforestation || 'Aucune'}</p>
+                            </div>
+                        </div>
+
+                        <!-- Bloc Environnemental -->
+                        <div class="bg-emerald-950/20 border border-emerald-900/40 rounded-xl p-4 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center mb-2">
+                                <i class="fa-solid fa-leaf mr-2 text-emerald-500"></i> Clauses et Recommandations Environnementales
+                            </span>
+                            <div class="text-slate-300 text-sm whitespace-pre-line pl-4">${data.Clauses_et_Recommandations_Environnementales || 'Aucune clause environnementale spécifiée.'}</div>
+                        </div>
+
+                        <!-- Bloc Social -->
+                        <div class="bg-sky-950/20 border border-sky-900/40 rounded-xl p-4 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1.5 h-full bg-sky-500"></div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center mb-2">
+                                <i class="fa-solid fa-handshake-angle mr-2 text-sky-500"></i> Clauses et Recommandations Sociales
+                            </span>
+                            <div class="text-slate-300 text-sm whitespace-pre-line pl-4">${data.Clauses_et_Recommandations_Sociales || 'Aucune clause sociale spécifiée.'}</div>
+                        </div>
+
+                    </div>
+                </div>
+            `;
+            document.getElementById('app').innerHTML = html;
+        });
+    </script>
+</body>
+</html>
