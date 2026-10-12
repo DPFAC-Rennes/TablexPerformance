@@ -22,8 +22,11 @@
         function formatText(text) {
             if (!text) return '';
             
+            // 1. Convertit les tirets suivis d'un espace (puces) en de vrais retours à la ligne
+            let processedText = text.replace(/(\s|^)-\s+/g, '$1\n- ');
+
             // Remplacement direct par recherche de sous-chaîne pour couper net l'URL si "Propositions" ou "Télécharger" est collé
-            let cleaned = text.replace(/(\.pdf|\.html|\.php)(Propositions|Télécharger)/gi, '$1 $2');
+            let cleaned = processedText.replace(/(\.pdf|\.html|\.php)(Propositions|Télécharger)/gi, '$1 $2');
             
             // Découpage par mots pour transformer les liens
             let words = cleaned.split(/\s+/);
