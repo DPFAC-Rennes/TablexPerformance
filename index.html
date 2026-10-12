@@ -22,35 +22,33 @@
         function formatText(text) {
             if (!text) return '';
             
-            // On découpe le texte par mots pour analyser chaque bloc séparément
-            let words = text.split(/\s+/);
+            // Remplacement direct par recherche de sous-chaîne pour couper net l'URL si "Propositions" ou "Télécharger" est collé
+            let cleaned = text.replace(/(\.pdf|\.html|\.php)(Propositions|Télécharger)/gi, '$1 $2');
+            
+            // Découpage par mots pour transformer les liens
+            let words = cleaned.split(/\s+/);
             
             return words.map(word => {
-                // Si le mot contient une URL
                 if (word.startsWith('http://') || word.startsWith('https://')) {
                     let cleanUrl = word;
                     let suffix = '';
 
-                    // On cherche explicitement la fin des extensions connues dans le mot
                     ['.pdf', '.html', '.php', '.aspx'].forEach(ext => {
                         let idx = cleanUrl.toLowerCase().indexOf(ext);
                         if (idx !== -1) {
                             let cutIndex = idx + ext.length;
-                            // Tout ce qui dépasse après l'extension est isolé (ex: Propositions)
                             suffix = cleanUrl.substring(cutIndex);
                             cleanUrl = cleanUrl.substring(0, cutIndex);
                         }
                     });
 
-                    // Nettoyage de la ponctuation finale de l'URL si besoin
                     let lastChar = cleanUrl.slice(-1);
                     if ([',', ';', '.', ')'].includes(lastChar)) {
                         suffix = lastChar + suffix;
                         cleanUrl = cleanUrl.slice(0, -1);
                     }
 
-                    let linkHtml = `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl} <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>`;
-                    return linkHtml + suffix;
+                    return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl} <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>${suffix}`;
                 }
                 return word;
             }).join(' ');
