@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
-        /* Gestion propre et stricte du texte pour éviter tout débordement de cadre */
         .content-text { width: 100%; word-break: break-word; overflow-wrap: break-word; white-space: pre-line; }
         .content-text a { color: #38bdf8 !important; text-decoration: underline !important; font-weight: 500; display: inline-block; max-width: 100%; word-break: break-all; }
         .content-text a:hover { color: #7dd3fc !important; }
@@ -23,17 +22,23 @@
         function formatText(text) {
             if (!text) return '';
             
-            // Étape 1 : Nettoyer les sauts de ligne intempestifs coupant une URL
+            // Nettoie les sauts de ligne intempestifs coupant une URL
             let cleanedText = text.replace(/(https?:\/\/[^\s]+)\s+([^\s]+)/g, '$1$2');
 
-            // Étape 2 : Regex universelle pour détecter les URL (gère les extensions .pdf, .html, .php et les paramètres avec ? ou &)
+            // Regex qui isole proprement l'URL jusqu'à l'extension (.pdf, .html, etc.) ou s'arrête avant un mot collé
             const urlRegex = /(https?:\/\/[^\s<]+)/g;
 
             return cleanedText.replace(urlRegex, function(url) {
-                // Nettoie les mots parasites collés courants à la fin (comme "Télécharger" ou "Propositions")
-                url = url.replace(/(Télécharger|Propositions).*$/, '');
-                
-                // Retire la ponctuation finale de fin de phrase s'il y en a une collée au lien
+                // Coupe net l'URL si elle contient l'une de ces extensions pour rejeter tout texte collé (Propositions, Télécharger, etc.)
+                const extensions = ['.pdf', '.html', '.php', '.aspx'];
+                for (let ext of extensions) {
+                    let index = url.indexOf(ext);
+                    if (index !== -1) {
+                        url = url.substring(0, index + ext.length);
+                        break;
+                    }
+                }
+
                 let cleanUrl = url.replace(/[.,;:)]$/, '');
                 let trailingChar = url.slice(cleanUrl.length);
                 
