@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
-        .content-text a { color: #38bdf8; text-decoration: underline; font-weight: 500; }
+        .content-text a { color: #38bdf8; text-decoration: underline; font-weight: 500; word-break: break-all; }
         .content-text a:hover { color: #7dd3fc; }
     </style>
 </head>
@@ -18,11 +18,11 @@
     </div>
 
     <script>
-        // Fonction pour transformer automatiquement les liens texte en liens cliquables
+        // Expression régulière robuste pour capturer les URL longues avec ? et %
         function formatText(text) {
             if (!text) return '';
-            const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-            return text.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer" class="break-all">$1 <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>');
+            const urlPattern = /(https?:\/\/[^\s]+)/g;
+            return text.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer">$1 <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>');
         }
 
         grist.ready({
@@ -103,6 +103,39 @@
                                 <span class="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center mb-1">
                                     <i class="fa-solid fa-industry mr-1.5"></i> Recommandations Filières
                                 </span>
-                                <div class="text-slate
+                                <div class="text-slate-200 text-sm content-text">${formatText(data.Recommandations_Filieres) || 'Aucune'}</div>
+                            </div>
+                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
+                                <span class="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center mb-1">
+                                    <i class="fa-solid fa-tree mr-1.5"></i> Recommandations Déforestation
+                                </span>
+                                <div class="text-slate-200 text-sm content-text">${formatText(data.Recommandations_Deforestation) || 'Aucune'}</div>
+                            </div>
+                        </div>
+
+                        <!-- Bloc Environnemental -->
+                        <div class="bg-emerald-950/20 border border-emerald-900/40 rounded-xl p-4 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center mb-2">
+                                <i class="fa-solid fa-leaf mr-2 text-emerald-500"></i> Clauses et Recommandations Environnementales
+                            </span>
+                            <div class="text-slate-300 text-sm whitespace-pre-line pl-4 content-text">${formatText(data.Clauses_et_Recommandations_Environnementales) || 'Aucune clause environnementale spécifiée.'}</div>
+                        </div>
+
+                        <!-- Bloc Social -->
+                        <div class="bg-sky-950/20 border border-sky-900/40 rounded-xl p-4 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1.5 h-full bg-sky-500"></div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center mb-2">
+                                <i class="fa-solid fa-handshake-angle mr-2 text-sky-500"></i> Clauses et Recommandations Sociales
+                            </span>
+                            <div class="text-slate-300 text-sm whitespace-pre-line pl-4 content-text">${formatText(data.Clauses_et_Recommandations_Sociales) || 'Aucune clause sociale spécifiée.'}</div>
+                        </div>
+
+                    </div>
+                </div>
+            `;
+            document.getElementById('app').innerHTML = html;
+        }
+    </script>
 </body>
 </html>
