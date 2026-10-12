@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        .content-text a { color: #38bdf8; text-decoration: underline; font-weight: 500; }
+        .content-text a:hover { color: #7dd3fc; }
     </style>
 </head>
 <body class="p-4">
@@ -16,6 +18,13 @@
     </div>
 
     <script>
+        // Fonction pour transformer automatiquement les liens texte en liens cliquables
+        function formatText(text) {
+            if (!text) return '';
+            const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+            return text.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer" class="break-all">$1 <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>');
+        }
+
         grist.ready({
             requiredColumns: [
                 "GM", "Libelle_du_GM", "Segment", "Art_58_Loi_AGEC", 
@@ -25,7 +34,11 @@
             ]
         });
 
-        grist.onRecord(function(record, mappings) {
+        grist.onRecord(function(record) {
+            updateView(record);
+        });
+
+        function updateView(record) {
             const data = grist.mapColumnNames(record) || record;
             
             if (!data || Object.keys(data).length === 0) {
@@ -58,13 +71,13 @@
                                 <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center mb-1">
                                     <i class="fa-solid fa-layer-group mr-1.5"></i> Segment
                                 </span>
-                                <p class="text-slate-200 text-sm">${data.Segment || 'Aucun segment défini'}</p>
+                                <div class="text-slate-200 text-sm content-text">${formatText(data.Segment) || 'Aucun segment défini'}</div>
                             </div>
                             <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
                                 <span class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center mb-1">
                                     <i class="fa-solid fa-scale-balanced mr-1.5"></i> Art. 58 Loi AGEC
                                 </span>
-                                <p class="text-slate-200 text-sm">${data.Art_58_Loi_AGEC || 'Non renseigné'}</p>
+                                <div class="text-slate-200 text-sm content-text">${formatText(data.Art_58_Loi_AGEC) || 'Non renseigné'}</div>
                             </div>
                         </div>
 
@@ -74,13 +87,13 @@
                                 <span class="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center mb-1">
                                     <i class="fa-solid fa-tags mr-1.5"></i> Catégorie AGEC
                                 </span>
-                                <p class="text-slate-200 text-sm">${data.Categorie_AGEC || 'Non renseignée'}</p>
+                                <div class="text-slate-200 text-sm content-text">${formatText(data.Categorie_AGEC) || 'Non renseignée'}</div>
                             </div>
                             <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
                                 <span class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center mb-1">
                                     <i class="fa-solid fa-lightbulb mr-1.5"></i> Recommandations AGEC
                                 </span>
-                                <p class="text-slate-200 text-sm">${data.Recommandations_AGEC || 'Aucune'}</p>
+                                <div class="text-slate-200 text-sm content-text">${formatText(data.Recommandations_AGEC) || 'Aucune'}</div>
                             </div>
                         </div>
 
@@ -90,39 +103,6 @@
                                 <span class="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center mb-1">
                                     <i class="fa-solid fa-industry mr-1.5"></i> Recommandations Filières
                                 </span>
-                                <p class="text-slate-200 text-sm">${data.Recommandations_Filieres || 'Aucune'}</p>
-                            </div>
-                            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
-                                <span class="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center mb-1">
-                                    <i class="fa-solid fa-tree mr-1.5"></i> Recommandations Déforestation
-                                </span>
-                                <p class="text-slate-200 text-sm">${data.Recommandations_Deforestation || 'Aucune'}</p>
-                            </div>
-                        </div>
-
-                        <!-- Bloc Environnemental -->
-                        <div class="bg-emerald-950/20 border border-emerald-900/40 rounded-xl p-4 relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
-                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center mb-2">
-                                <i class="fa-solid fa-leaf mr-2 text-emerald-500"></i> Clauses et Recommandations Environnementales
-                            </span>
-                            <div class="text-slate-300 text-sm whitespace-pre-line pl-4">${data.Clauses_et_Recommandations_Environnementales || 'Aucune clause environnementale spécifiée.'}</div>
-                        </div>
-
-                        <!-- Bloc Social -->
-                        <div class="bg-sky-950/20 border border-sky-900/40 rounded-xl p-4 relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-1.5 h-full bg-sky-500"></div>
-                            <span class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center mb-2">
-                                <i class="fa-solid fa-handshake-angle mr-2 text-sky-500"></i> Clauses et Recommandations Sociales
-                            </span>
-                            <div class="text-slate-300 text-sm whitespace-pre-line pl-4">${data.Clauses_et_Recommandations_Sociales || 'Aucune clause sociale spécifiée.'}</div>
-                        </div>
-
-                    </div>
-                </div>
-            `;
-            document.getElementById('app').innerHTML = html;
-        });
-    </script>
+                                <div class="text-slate
 </body>
 </html>
