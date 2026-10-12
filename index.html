@@ -22,27 +22,12 @@
         function formatText(text) {
             if (!text) return '';
             
-            // 1. Coupe net les mots parasites collés aux extensions dans les URL
             let cleaned = text.replace(/(\.pdf|\.html|\.php)(Propositions|Télécharger)/gi, '$1 $2');
-            
-            // 2. Transforme les tirets séparés par des espaces en de vrais retours à la ligne avec puces HTML
-            // On ignore les tirets précédés de %20 (pour ne pas casser les liens)
-            cleaned = cleaned.replace(/([^%]\s+)-(\s+)/g, '<br><br>• ');
+            cleaned = cleaned.replace(/([^\/])\s+-\s+/g, '$1<br><br>• ');
 
-            // 3. Détection et transformation des liens URL en balises <a> cliquables
             const urlRegex = /(https?:\/\/[^\s<]+)/g;
 
             return cleaned.replace(urlRegex, function(url) {
-                ['.pdf', '.html', '.php', '.aspx'].forEach(ext => {
-                    let idx = url.toLowerCase().indexOf(ext);
-                    if (idx !== -1) {
-                        let cutIndex = idx + ext.length;
-                        let suffix = url.substring(cutIndex);
-                        url = url.substring(0, cutIndex) + suffix;
-                    }
-                });
-
-                // Nettoyage des extensions si un mot s'est collé sans espace
                 ['.pdf', '.html', '.php', '.aspx'].forEach(ext => {
                     let idx = url.toLowerCase().indexOf(ext);
                     if (idx !== -1) {
@@ -137,7 +122,7 @@
                             </div>
                             <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 overflow-hidden">
                                 <span class="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center mb-1">
-                                    <i class="fa-solid tab-tree mr-1.5"></i> Recommandations Déforestation
+                                    <i class="fa-solid fa-tree mr-1.5"></i> Recommandations Déforestation
                                 </span>
                                 <div class="text-slate-200 text-sm content-text">${formatText(data.Recommandations_Deforestation) || 'Aucune'}</div>
                             </div>
