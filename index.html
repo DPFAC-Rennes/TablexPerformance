@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
-        .content-text a { color: #38bdf8; text-decoration: underline; font-weight: 500; word-break: break-all; }
-        .content-text a:hover { color: #7dd3fc; }
+        .content-text a { color: #38bdf8 !important; text-decoration: underline !important; font-weight: 500; word-break: break-all; }
+        .content-text a:hover { color: #7dd3fc !important; }
     </style>
 </head>
 <body class="p-4">
@@ -18,11 +18,17 @@
     </div>
 
     <script>
-        // Expression régulière robuste pour capturer les URL longues avec ? et %
+        // Détection ultra-robuste des liens URL dans le texte
         function formatText(text) {
             if (!text) return '';
-            const urlPattern = /(https?:\/\/[^\s]+)/g;
-            return text.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer">$1 <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>');
+            // Transforme n'importe quelle chaîne commençant par http/https en lien cliquable sécurisé
+            const urlRegex = /(https?:\/\/[^\s<]+)/g;
+            return text.replace(urlRegex, function(url) {
+                // Nettoie la ponctuation finale éventuelle (comme un point ou une parenthèse collée à l'URL)
+                let cleanUrl = url.replace(/[.,;:)]$/, '');
+                let trailingChar = url.slice(cleanUrl.length);
+                return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl} <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i></a>${trailingChar}`;
+            });
         }
 
         grist.ready({
@@ -35,10 +41,6 @@
         });
 
         grist.onRecord(function(record) {
-            updateView(record);
-        });
-
-        function updateView(record) {
             const data = grist.mapColumnNames(record) || record;
             
             if (!data || Object.keys(data).length === 0) {
@@ -135,7 +137,9 @@
                 </div>
             `;
             document.getElementById('app').innerHTML = html;
-        }
+        });
     </script>
+</body>
+</html>
 </body>
 </html>
